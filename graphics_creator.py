@@ -46,7 +46,7 @@ def boxplot_generator(data, columns, batch_size=10000):
         plt.show()
 
 
-def correlation_matrix(data, columns, batch_size=10000):
+def correlation_matrix(title, data, columns, batch_size=10000):
     n = len(columns)
     cov_matrix = np.zeros((n, n))
     count_matrix = np.zeros((n, n))
@@ -62,5 +62,5 @@ def correlation_matrix(data, columns, batch_size=10000):
     sns.heatmap(avg_corr_df, annot=True, cmap='coolwarm', vmin=-1, vmax=1, center=0, 
                 square=True, linewidths=0.5, cbar_kws={"shrink": .8})
     plt.title("correlation matrix", fontsize=14)
-    plt.savefig(os.path.join(GRAPHICS_PATH + 'correlation_matrix.png'), format='png', dpi=900)
+    plt.savefig(os.path.join(GRAPHICS_PATH + 'correlation_matrix_' + title + '.png'), format='png', dpi=900)
     plt.show()
