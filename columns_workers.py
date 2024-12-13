@@ -22,7 +22,7 @@ def columns_text2code(columns, data, batch_size=1000): # assigns unique code to 
         unique_values = data[column].dropna().unique()
         mappings[column] = {value: idx for idx, value in enumerate(unique_values)}
         for value, code in mappings[column].items():
-            logging.info(f'{code} -> {value}')
+            logging.info(f'{column}: {code} -> {value}')
     total_rows = data.shape[0]
     for start in range(0, total_rows, batch_size):
         end = min(start + batch_size, total_rows)
