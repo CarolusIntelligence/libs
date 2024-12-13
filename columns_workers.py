@@ -1,4 +1,4 @@
-from external_libs import logging, pd
+from external_libs import logging, pd, warnings, np
 from config import *
 
 
@@ -60,6 +60,23 @@ def date_converter(data, columns, expected_format, batch_size=1000): # convert d
                 batch_data = pd.to_datetime(batch_data, format=expected_format, errors='coerce')
                 data.loc[start:end, column] = batch_data.dt.strftime('%m/%d/%Y')
     return data
+
+
+def date_converter_to_float(data, columns, batch_size=1000): # convert date yyyy-mm-dd to float
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        for column in columns:
+            if column in data.columns:
+                total_rows = data.shape[0]
+                for start in range(0, total_rows, batch_size):
+                    end = min(start + batch_size, total_rows)
+                    batch_data = data.loc[start:end, column].copy()
+                    batch_data = pd.to_datetime(batch_data, errors='coerce', format='%Y-%m-%d')
+                    data.loc[start:end, column] = batch_data.map(lambda x: x.timestamp() if pd.notnull(x) else np.nan)
+    return data
+
+
+
 
 
 

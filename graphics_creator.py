@@ -46,7 +46,7 @@ def boxplot_generator(data, columns, batch_size=10000):
         plt.show()
 
 
-def correlation_matrix(title, data, columns, batch_size=10000):
+def correlation_matrix(title, data, columns, batch_size=1000):    
     n = len(columns)
     cov_matrix = np.zeros((n, n))
     count_matrix = np.zeros((n, n))
@@ -56,11 +56,16 @@ def correlation_matrix(title, data, columns, batch_size=10000):
             batch_corr = batch.corr().values
             cov_matrix += np.nan_to_num(batch_corr)
             count_matrix += ~np.isnan(batch_corr)
-    avg_corr_matrix = cov_matrix / count_matrix
+    avg_corr_matrix = cov_matrix / (count_matrix + 1e-10)
     avg_corr_df = pd.DataFrame(avg_corr_matrix, index=columns, columns=columns)
-    plt.figure(figsize=(12, 12))
-    sns.heatmap(avg_corr_df, annot=True, cmap='coolwarm', vmin=-1, vmax=1, center=0, 
-                square=True, linewidths=0.5, cbar_kws={"shrink": .8})
-    plt.title("correlation matrix", fontsize=14)
-    plt.savefig(os.path.join(GRAPHICS_PATH + 'correlation_matrix_' + title + '.png'), format='png', dpi=900)
+    plt.figure(figsize=(16, 16)) 
+    sns.heatmap(
+        avg_corr_df, annot=True, cmap='coolwarm', vmin=-1, vmax=1, center=0, 
+        square=True, linewidths=0.5, cbar_kws={"shrink": .8},
+        annot_kws={"size": 8}  
+    )
+    plt.title("Correlation Matrix", fontsize=16)
+    plt.tight_layout()  
+    plt.savefig(os.path.join(GRAPHICS_PATH, f'correlation_matrix_{title}.png'), format='png', dpi=900)
     plt.show()
+
