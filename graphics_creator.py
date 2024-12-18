@@ -1,5 +1,5 @@
 from external_libs import logging, plt, np, pd, sns, os
-from libs.colors import PersoColo as persocolo
+from color import *
 from config import *
 
 
@@ -30,7 +30,7 @@ def boxplot_generator(data, columns, batch_size=10000):
         global_min, global_q1, global_median, global_q3, global_max = batch_statistics(data, column, batch_size)
         fig, ax = plt.subplots(figsize=(12, 4), facecolor='white')
         ax.boxplot([[global_min, global_q1, global_median, global_q3, global_max]], vert=False, patch_artist=True,
-                   boxprops=dict(facecolor=persocolo.beige, color='black'),
+                   boxprops=dict(facecolor=STD_GRAPH, color='black'),
                    whiskerprops=dict(color='blue'),
                    capprops=dict(color='green'),
                    medianprops=dict(color='red'))

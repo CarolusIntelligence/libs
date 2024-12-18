@@ -34,6 +34,8 @@ def columns_text2code(columns, data, batch_size=1000): # assigns unique code to 
     return data
 
 
+
+
 def date_converter(data, columns, expected_format, batch_size=1000): # convert dates to the expected format  
     logger.info(f"convert dates for columns: {columns}, to the expected format: {expected_format}")
     date_patterns = [

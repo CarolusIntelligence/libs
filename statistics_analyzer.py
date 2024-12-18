@@ -7,6 +7,20 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 logger = logging.getLogger(__name__)
 
 
+pd.options.display.float_format = '{:.5f}'.format 
+
+def describe_columns(data, columns, batch_size=1000):
+    describe_results = []
+    num_batches = (len(data) // batch_size) + 1
+    for i in range(num_batches):
+        start_idx = i * batch_size
+        end_idx = start_idx + batch_size
+        batch_data = data.iloc[start_idx:end_idx]
+        batch_description = batch_data[columns].describe(include='all')
+        describe_results.append(batch_description)
+    final_description = pd.concat(describe_results, axis=1).T.groupby(level=0).mean()
+    return final_description.reset_index()
+
 def basic_report(columns, data, batch_size=1000):
     logger.info(f"Missing values: {data.isnull().sum().to_dict()}")  # Check missing values
     logger.info(f"Duplicated data: {data.duplicated().sum()}")  # Check duplicated data
@@ -17,27 +31,34 @@ def basic_report(columns, data, batch_size=1000):
             "sum": 0,
             "count": 0,
             "std_sum": 0,
-            "values": []
+            "values": [],
+            "null_count": 0,
+            "nan_count": 0
         } for col in columns
     }
     batches = np.array_split(data, max(1, len(data) // batch_size))
     for batch in batches:
         for column in columns:
-            batch_count = len(batch[column])
-            batch_sum = batch[column].sum()
-            batch_var = batch[column].var()
+            batch_count = batch[column].notnull().sum()
+            batch_sum = batch[column].sum(skipna=True)
+            batch_var = batch[column].var(skipna=True)
             batch_std_sum = batch_var * batch_count
-            batch_values = batch[column].tolist()
-
+            batch_values = batch[column].dropna().tolist()
+            null_count = batch[column].isnull().sum()
+            nan_count = batch[column].isna().sum()  # Corrigé ici
             overall_stats[column]["sum"] += batch_sum
             overall_stats[column]["count"] += batch_count
             overall_stats[column]["std_sum"] += batch_std_sum
             overall_stats[column]["values"].extend(batch_values)
+            overall_stats[column]["null_count"] += null_count
+            overall_stats[column]["nan_count"] += nan_count
     stats_data = []
     for column in columns:
         total_count = overall_stats[column]["count"]
-        overall_mean = overall_stats[column]["sum"] / total_count
-        overall_std = np.sqrt(overall_stats[column]["std_sum"] / total_count)
+        total_nulls = overall_stats[column]["null_count"]
+        total_nans = overall_stats[column]["nan_count"]
+        overall_mean = overall_stats[column]["sum"] / total_count if total_count else None
+        overall_std = np.sqrt(overall_stats[column]["std_sum"] / total_count) if total_count else None
         all_values = pd.Series(overall_stats[column]["values"])
         global_min = all_values.min()
         global_max = all_values.max()
@@ -58,11 +79,16 @@ def basic_report(columns, data, batch_size=1000):
             "q1": global_q1,
             "q3": global_q3,
             "iqr": global_iqr,
-            "variance_coef": global_vc
+            "variance_coef": global_vc,
+            "null_count": total_nulls,
+            "nan_count": total_nans
         })
         logger.info(
             f"{column}: mean = {overall_mean}, median = {global_median}, mode = {global_mode}, "
             f"std = {overall_std}, min = {global_min}, max = {global_max}, q1 = {global_q1}, "
-            f"q3 = {global_q3}, IQR = {global_iqr}, variance coef = {global_vc}"
+            f"q3 = {global_q3}, IQR = {global_iqr}, variance coef = {global_vc}, "
+            f"null_count = {total_nulls}, nan_count = {total_nans}"
         )
     return pd.DataFrame(stats_data)
+
+
